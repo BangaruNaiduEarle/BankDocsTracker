@@ -181,7 +181,7 @@ const ViewReports = () => {
             messageLines.push(`🏦 *${bankName}*`);
             groupedByBank[bankName].forEach((report, index) => {
                 messageLines.push(
-                    `${index + 1}) Applicant Name: ${report.Applicant_Borrower_Name || "N/A"}\n` +
+                    `${index + 1}) Applicant: ${report.Applicant_Borrower_Name || "N/A"}\n` +
                     `    Date: ${report.Date},\n` +
                     `    SRO: ${report.SRO || "N/A"}\n` +
                     `    Loan Number: ${report.Loan_number || "--"}`
