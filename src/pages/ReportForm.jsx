@@ -12,16 +12,11 @@ const ReportForm = () => {
 
   // Predefined bank options
   const bankOptions = [
-    'HDFC Home Loans',
-    'Axis Home Loans',
-    'IDFC Life',
-    'SBI Home Loans',
-    'ICICI Home Loans',
-    'Kotak Home Loans',
-    'PNB Home Loans',
-    'BOI Home Loans',
-    'Canara Home Loans',
-    'Union Home Loans'
+     'Tata Capital Housing Finance',
+        'PNB Housing Finance Ltd',
+        'ICICI Bank Limited',
+        'Bajaj Housing Finance Ltd',
+        'Aditya Birla Housing',
   ];
 
   const [loading, setLoading] = useState(false);
