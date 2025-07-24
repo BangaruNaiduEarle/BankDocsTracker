@@ -167,7 +167,7 @@ const ViewReports = () => {
     const generateWhatsAppMessage = (reports) => {
         const groupedByBank = {};
 
-       
+
         reports.forEach((report) => {
             if (!groupedByBank[report.Bank_Name]) {
                 groupedByBank[report.Bank_Name] = [];
@@ -181,14 +181,18 @@ const ViewReports = () => {
             messageLines.push(`🏦 *${bankName}*`);
             groupedByBank[bankName].forEach((report, index) => {
                 messageLines.push(
-                    `${index + 1}) SRO: ${report.SRO || "N/A"}, Seller: ${report.Seller_Name || "N/A"}, Borrower: ${report.Applicant_Borrower_Name || "N/A"}, Created At: ${report.Date}, Bank: ${report.Bank_Name}, Loan Number:${report.Loan_number || "--"}`
+                    `${index + 1}) Applicant Name: ${report.Applicant_Borrower_Name || "N/A"}\n` +
+                    `    Date: ${report.Date},\n` +
+                    `    SRO: ${report.SRO || "N/A"}\n` +
+                    `    Loan Number: ${report.Loan_number || "--"}`
                 );
+
             });
-            messageLines.push(""); 
+            messageLines.push("");
         });
-        
-         messageLines.push(`Total Files -- ${reports.length}`); 
-          
+
+        messageLines.push(`Total Files -- ${reports.length}`);
+
         return messageLines.join("\n");
     };
 
@@ -710,8 +714,8 @@ const ViewReports = () => {
                                             value={filters.Date}
                                             onChange={(e) => handleFilterChange('Date', e.target.value)}
                                             className={`appearance-none px-3 py-2 pr-8 rounded-full text-xs font-medium border transition-colors ${filters.Date
-                                                    ? 'bg-blue-100 border-blue-300 text-blue-800'
-                                                    : 'bg-gray-100 border-gray-300 text-gray-700'
+                                                ? 'bg-blue-100 border-blue-300 text-blue-800'
+                                                : 'bg-gray-100 border-gray-300 text-gray-700'
                                                 }`}
                                         >
                                             <option value="">Date</option>
@@ -730,8 +734,8 @@ const ViewReports = () => {
                                             value={filters.Status}
                                             onChange={(e) => handleFilterChange('Status', e.target.value)}
                                             className={`appearance-none px-3 py-2 pr-8 rounded-full text-xs font-medium border transition-colors ${filters.Status
-                                                    ? 'bg-blue-100 border-blue-300 text-blue-800'
-                                                    : 'bg-gray-100 border-gray-300 text-gray-700'
+                                                ? 'bg-blue-100 border-blue-300 text-blue-800'
+                                                : 'bg-gray-100 border-gray-300 text-gray-700'
                                                 }`}
                                         >
                                             <option value="">Status</option>
@@ -750,8 +754,8 @@ const ViewReports = () => {
                                             value={filters.Bank_Name}
                                             onChange={(e) => handleFilterChange('Bank_Name', e.target.value)}
                                             className={`appearance-none px-3 py-2 pr-8 rounded-full text-xs font-medium border transition-colors ${filters.Bank_Name
-                                                    ? 'bg-blue-100 border-blue-300 text-blue-800'
-                                                    : 'bg-gray-100 border-gray-300 text-gray-700'
+                                                ? 'bg-blue-100 border-blue-300 text-blue-800'
+                                                : 'bg-gray-100 border-gray-300 text-gray-700'
                                                 }`}
                                         >
                                             <option value="">Bank</option>
@@ -768,8 +772,8 @@ const ViewReports = () => {
                                     <button
                                         onClick={() => setExpandedMobileFilters(!expandedMobileFilters)}
                                         className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-medium border transition-colors ${(filters.Cheque_Status || filters.Document_Status)
-                                                ? 'bg-blue-100 border-blue-300 text-blue-800'
-                                                : 'bg-gray-100 border-gray-300 text-gray-700'
+                                            ? 'bg-blue-100 border-blue-300 text-blue-800'
+                                            : 'bg-gray-100 border-gray-300 text-gray-700'
                                             }`}
                                     >
                                         More
