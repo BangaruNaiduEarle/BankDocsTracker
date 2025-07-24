@@ -183,7 +183,7 @@ const ViewReports = () => {
                 messageLines.push(
                     `${index + 1}) Applicant: ${report.Applicant_Borrower_Name || "N/A"}\n` +
                     `    Date: ${report.Date},\n` +
-                    `    SRO: ${report.SRO || "N/A"}\n` +
+                    `    SRO/BT: ${report.SRO || "N/A"}\n` +
                     `    Loan Number: ${report.Loan_number || "--"}`
                 );
 
