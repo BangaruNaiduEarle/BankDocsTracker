@@ -164,37 +164,69 @@ const ViewReports = () => {
     //     return messageLines.join('\n\n');
     // };
 
+    // const generateWhatsAppMessage = (reports) => {
+    //     const groupedByBank = {};
+
+
+    //     reports.forEach((report) => {
+    //         if (!groupedByBank[report.Bank_Name]) {
+    //             groupedByBank[report.Bank_Name] = [];
+    //         }
+    //         groupedByBank[report.Bank_Name].push(report);
+    //     });
+
+    //     const messageLines = [];
+
+    //     Object.keys(groupedByBank).forEach((bankName) => {
+    //         messageLines.push(`🏦 *${bankName}*`);
+    //         groupedByBank[bankName].forEach((report, index) => {
+    //             messageLines.push(
+    //                 `${index + 1}) Applicant: ${report.Applicant_Borrower_Name || "N/A"}\n` +
+    //                 `    Date: ${report.Date},\n` +
+    //                 `    SRO/BT: ${report.SRO || "N/A"}\n` +
+    //                 `    Loan Number: ${report.Loan_number || "--"}`
+    //             );
+
+    //         });
+    //         messageLines.push("");
+    //     });
+
+    //     messageLines.push(`Total Files -- ${reports.length}`);
+
+    //     return messageLines.join("\n");
+    // };
+
     const generateWhatsAppMessage = (reports) => {
-        const groupedByBank = {};
+    const groupedByBank = {};
 
+    reports.forEach((report) => {
+        if (!groupedByBank[report.Bank_Name]) {
+            groupedByBank[report.Bank_Name] = [];
+        }
+        groupedByBank[report.Bank_Name].push(report);
+    });
 
-        reports.forEach((report) => {
-            if (!groupedByBank[report.Bank_Name]) {
-                groupedByBank[report.Bank_Name] = [];
-            }
-            groupedByBank[report.Bank_Name].push(report);
+    const messageLines = [];
+
+    Object.keys(groupedByBank).forEach((bankName) => {
+        messageLines.push(`🏦 *${bankName}*`);
+        groupedByBank[bankName].forEach((report, index) => {
+            // Modified to check SRO first, then BT, and display the appropriate field and value
+            const sroOrBt = report.SRO ? `SRO: ${report.SRO}` : report.BT ? `BT: ${report.BT}` : 'SRO/BT: N/A';
+            messageLines.push(
+                `${index + 1}) Applicant: ${report.Applicant_Borrower_Name || "N/A"}\n` +
+                `    Date: ${report.Date},\n` +
+                `    ${sroOrBt}\n` +
+                `    Loan Number: ${report.Loan_number || "--"}`
+            );
         });
+        messageLines.push("");
+    });
 
-        const messageLines = [];
+    messageLines.push(`Total Files -- ${reports.length}`);
 
-        Object.keys(groupedByBank).forEach((bankName) => {
-            messageLines.push(`🏦 *${bankName}*`);
-            groupedByBank[bankName].forEach((report, index) => {
-                messageLines.push(
-                    `${index + 1}) Applicant: ${report.Applicant_Borrower_Name || "N/A"}\n` +
-                    `    Date: ${report.Date},\n` +
-                    `    SRO/BT: ${report.SRO || "N/A"}\n` +
-                    `    Loan Number: ${report.Loan_number || "--"}`
-                );
-
-            });
-            messageLines.push("");
-        });
-
-        messageLines.push(`Total Files -- ${reports.length}`);
-
-        return messageLines.join("\n");
-    };
+    return messageLines.join("\n");
+};
 
 
     const shareViaWhatsApp = () => {
@@ -221,10 +253,14 @@ const ViewReports = () => {
             }
 
             const data = await response.json();
-            console.log("Google Sheets Data", data);
+            // console.log("Google Sheets Data", data);
 
-            setReports(data || []);
-            setFilteredReports(data || []);
+            // setReports(data || []);
+            // setFilteredReports(data || []);
+            // Initialize isExpanded for each report
+            const reportsWithExpanded = data.map(report => ({ ...report, isExpanded: false }));
+            setReports(reportsWithExpanded || []);
+            setFilteredReports(reportsWithExpanded || []);
 
         } catch (err) {
             console.error('Fetch error:', err);
@@ -891,7 +927,7 @@ const ViewReports = () => {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            SRO.
+                                            SRO/BT.
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Seller Name
@@ -929,7 +965,7 @@ const ViewReports = () => {
                                         <tr key={report.ID} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                    #{report.SRO}
+                                                    #{report.SRO || report.BT}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -994,54 +1030,40 @@ const ViewReports = () => {
 
                         </div>
 
-                        {/* Mobile Cards */}
+
+                        {/* Mobile Accordion - Changed to use accordion layout for mobile view */}
                         <div className="lg:hidden">
                             {filteredReports.map((report) => (
-
-                                <div key={report.ID} className="p-4 ">
+                                <div key={report.ID} className="p-4">
                                     <div className="max-w-sm mx-auto bg-white">
                                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                                            {/* Header */}
-                                            <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-3 border-b border-blue-200">
-                                                <div className="flex items-center justify-between">
+                                            {/* Accordion Header - Added compact header with toggle functionality */}
+                                            <div
+                                                className="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-3 border-b border-blue-200 flex items-center justify-between cursor-pointer"
+                                                onClick={() => setReports(prev =>
+                                                    prev.map(r =>
+                                                        r.ID === report.ID ? { ...r, isExpanded: !r.isExpanded } : r
+                                                    )
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <span>{report.SRO ? `SRO` : `BT`}</span>
                                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-500 text-white">
-                                                        #{report.SRO}
+                                                        #{report.SRO || report.BT}
                                                     </span>
                                                     {getStatusBadge(report.Status)}
                                                 </div>
+                                                {/* Toggle Icon - Added to indicate expand/collapse state */}
+                                                {report.isExpanded ? (
+                                                    <ChevronUp className="w-5 h-5 text-gray-600" />
+                                                ) : (
+                                                    <ChevronDown className="w-5 h-5 text-gray-600" />
+                                                )}
                                             </div>
 
-                                            {/* Content */}
-                                            <div className="p-4 space-y-4">
-                                                {/* Dates */}
-                                                <div className="grid grid-cols-2 gap-3 text-xs">
-                                                    <div className="flex items-center gap-2 text-gray-600">
-                                                        <Calendar className="w-3 h-3" />
-                                                        <div>
-                                                            <div className="font-medium">Created</div>
-                                                            <div className="text-gray-500">{formatDate(report.Date)}</div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-between items-center gap-2 text-gray-600">
-                                                        <Calendar className="w-3 h-3" />
-                                                        <div>
-                                                            <div className="font-medium">Updated</div>
-                                                            <div className="text-gray-500">{formatDate(report.Update_Time)}</div>
-                                                        </div>
-
-                                                        <button
-
-                                                            className="text-sm  hover:cursor-pointer bg-black/20  px-2 py-2 text-white rounded-lg"
-                                                            onClick={() => handledelete(report)}
-                                                        >
-                                                            <Trash2 />
-                                                        </button>
-                                                    </div>
-
-                                                </div>
-
-                                                {/* Parties */}
-                                                <div className="space-y-3">
+                                            {/* Accordion Compact View - Added to show key details when collapsed */}
+                                            {!report.isExpanded && (
+                                                <div className="px-4 py-3 bg-white">
                                                     <div className="flex items-center gap-3">
                                                         <User className="w-4 h-4 text-blue-500 flex-shrink-0" />
                                                         <div className="min-w-0 flex-1">
@@ -1051,8 +1073,7 @@ const ViewReports = () => {
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                    <div className="flex items-center gap-3">
+                                                    <div className="flex items-center gap-3 mt-2">
                                                         <Building2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
                                                         <div className="min-w-0 flex-1">
                                                             <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">Bank</div>
@@ -1060,35 +1081,84 @@ const ViewReports = () => {
                                                         </div>
                                                     </div>
                                                 </div>
+                                            )}
 
-                                                {/* Submission Status */}
-                                                <div className="bg-gray-50 rounded-lg p-3">
-                                                    <div className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-2">Submissions</div>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        <div className="text-center">
-                                                            <div className="text-xs text-gray-600 mb-1">Cheque</div>
-                                                            {getSubmissionBadge(report.Cheque_Status)}
+                                            {/* Accordion Expanded Content - Original card content shown when expanded */}
+                                            {report.isExpanded && (
+                                                <div className="p-4 space-y-4">
+                                                    {/* Dates */}
+                                                    <div className="grid grid-cols-2 gap-3 text-xs">
+                                                        <div className="flex items-center gap-2 text-gray-600">
+                                                            <Calendar className="w-3 h-3" />
+                                                            <div>
+                                                                <div className="font-medium">Created</div>
+                                                                <div className="text-gray-500">{formatDate(report.Date)}</div>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-center">
-                                                            <div className="text-xs text-gray-600 mb-1">Documents</div>
-                                                            {getSubmissionBadge(report.Document_Status)}
+                                                        <div className="flex justify-between items-center gap-2 text-gray-600">
+                                                            <Calendar className="w-3 h-3" />
+                                                            <div>
+                                                                <div className="font-medium">Updated</div>
+                                                                <div className="text-gray-500">{formatDate(report.Update_Time)}</div>
+                                                            </div>
+                                                            <button
+                                                                className="text-sm hover:cursor-pointer bg-black/20 px-2 py-2 text-white rounded-lg"
+                                                                onClick={() => handledelete(report)}
+                                                            >
+                                                                <Trash2 />
+                                                            </button>
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                {/* Loan Number Editor */}
-                                                <div className="bg-blue-50 rounded-lg p-3">
-                                                    <div className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-2">Loan Number</div>
-                                                    <LoanNumberEditor
-                                                        reportId={report.ID}
-                                                        initialValue={report.Loan_number || ''}
-                                                        onSave={(value) => updateField(report.ID, 'Loan_number', value)}
-                                                        isMobile={true}
-                                                    />
-                                                </div>
-                                            </div>
+                                                    {/* Parties - Repeated for consistency, could be reused from compact view */}
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <User className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">Transaction</div>
+                                                                <div className="text-sm font-medium text-gray-900 truncate">
+                                                                    {report.Seller_Name} → {report.Applicant_Borrower_Name}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <Building2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">Bank</div>
+                                                                <div className="text-sm text-gray-900 truncate">{report.Bank_Name}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-                                            {/* Footer */}
+                                                    {/* Submission Status */}
+                                                    <div className="bg-gray-50 rounded-lg p-3">
+                                                        <div className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-2">Submissions</div>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div className="text-center">
+                                                                <div className="text-xs text-gray-600 mb-1">Cheque</div>
+                                                                {getSubmissionBadge(report.Cheque_Status)}
+                                                            </div>
+                                                            <div className="text-center">
+                                                                <div className="text-xs text-gray-600 mb-1">Documents</div>
+                                                                {getSubmissionBadge(report.Document_Status)}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Loan Number Editor */}
+                                                    <div className="bg-blue-50 rounded-lg p-3">
+                                                        <div className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-2">Loan Number</div>
+                                                        <LoanNumberEditor
+                                                            reportId={report.ID}
+                                                            initialValue={report.Loan_number || ''}
+                                                            onSave={(value) => updateField(report.ID, 'Loan_number', value)}
+                                                            isMobile={true}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Footer - Always visible for quick access to View Details */}
                                             <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
                                                 <button
                                                     onClick={() => openModal(report)}
@@ -1096,14 +1166,14 @@ const ViewReports = () => {
                                                 >
                                                     View Details
                                                 </button>
-
-
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
+
+
 
                         {selectedReport && (
                             <ReportDetailModal

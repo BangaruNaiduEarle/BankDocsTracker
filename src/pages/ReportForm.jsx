@@ -7,16 +7,18 @@ const ReportForm = () => {
     sro: '',
     sellerName: '',
     ApplicantBorrowerName: '',
-    bankName: ''
+    bankName: '',
+    // Added sroOrBt field to track radio button selection
+    sroOrBt: 'SRO' // Default to SRO
   });
 
   // Predefined bank options
   const bankOptions = [
-     'Tata Capital Housing Finance',
-        'PNB Housing Finance Ltd',
-        'ICICI Bank Limited',
-        'Bajaj Housing Finance Ltd',
-        'Aditya Birla Housing',
+    'Tata Capital Housing Finance',
+    'PNB Housing Finance Ltd',
+    'ICICI Bank Limited',
+    'Bajaj Housing Finance Ltd',
+    'Aditya Birla Housing',
   ];
 
   const [loading, setLoading] = useState(false);
@@ -60,87 +62,85 @@ const ReportForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+    if (!validateForm()) return;
 
-  if (!validateForm()) return;
+    setLoading(true);
+    setMessage({ type: '', text: '' });
 
-  setLoading(true);
-  setMessage({ type: '', text: '' });
+    const formatDate = (date) => {
+      const pad = (n) => n.toString().padStart(2, '0');
 
-const formatDate = (date) => {
-  const pad = (n) => n.toString().padStart(2, '0');
+      const year = date.getFullYear();
+      const month = pad(date.getMonth() + 1); // Months are 0-based
+      const day = pad(date.getDate());
+      const hours = pad(date.getHours());
+      const minutes = pad(date.getMinutes());
+      const seconds = pad(date.getSeconds());
 
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1); // Months are 0-based
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-  const seconds = pad(date.getSeconds());
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };
 
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-};
+    // Create full payload with default values, conditionally assigning sro value to SRO or BT column
+    const fullFormData = {
+      ID: 'INCREMENT', // Let SheetDB or Google Sheet script handle auto-increment
+      Date: formatDate(new Date()),
+      SRO: formData.sroOrBt === 'SRO' ? formData.sro : '', // Store in SRO if SRO is selected
+      BT: formData.sroOrBt === 'BT' ? formData.sro : '', // Store in BT if BT is selected
+      Seller_Name: formData.sellerName,
+      Applicant_Borrower_Name: formData.ApplicantBorrowerName,
+      Bank_Name: formData.bankName,
+      Status: 'Pending',
+      Cheque_Status: 'Pending',
+      Document_Status: 'Pending',
+      Update_Time: formatDate(new Date()),
+      Loan_number: ''
+    };
 
+    console.log(fullFormData)
 
-  // Create full payload with default values
-  const fullFormData = {
-    ID: 'INCREMENT', // Let SheetDB or Google Sheet script handle auto-increment
-     Date: formatDate(new Date()),
-     SRO: formData.sro,
-    "Seller_Name": formData.sellerName,
-    "Applicant_Borrower_Name": formData.ApplicantBorrowerName,
-    "Bank_Name": formData.bankName,
-    Status: 'Pending',
-    "Cheque_Status": 'Pending',
-    "Document_Status": 'Pending',
-    "Update_Time": formatDate(new Date()),
-    "Loan_number": ''
-  };
-
-  console.log(fullFormData)
-
-  try {
-    const response = await fetch(`https://sheetdb.io/api/v1/ov7cl6dzqq037`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ data: [fullFormData] }), // SheetDB expects `data` key
-    });
-
-    const data = await response.json();
-    console.log("RESPOnse post DATA", data);
-
-    if (response.ok) {
-      setMessage({
-        type: 'success',
-        text: `Report created successfully!`,
+    try {
+      const response = await fetch(`https://sheetdb.io/api/v1/ov7cl6dzqq037`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: [fullFormData] }), // SheetDB expects `data` key
       });
 
-      setFormData({
-        sro: '',
-        sellerName: '',
-        ApplicantBorrowerName: '',
-        bankName: '',
-      });
-    } else {
+      const data = await response.json();
+      console.log("RESPOnse post DATA", data);
+
+      if (response.ok) {
+        setMessage({
+          type: 'success',
+          text: `Report created successfully!`,
+        });
+
+        setFormData({
+          sro: '',
+          sellerName: '',
+          ApplicantBorrowerName: '',
+          bankName: '',
+          sroOrBt: 'SRO' // Reset to default SRO
+        });
+      } else {
+        setMessage({
+          type: 'error',
+          text: data.message || 'Failed to create report',
+        });
+      }
+    } catch (error) {
       setMessage({
         type: 'error',
-        text: data.message || 'Failed to create report',
+        text: 'Network error. Please try again.',
       });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    setMessage({
-      type: 'error',
-      text: 'Network error. Please try again.',
-    });
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
@@ -171,11 +171,38 @@ const formatDate = (date) => {
           )}
 
           <div className="space-y-6">
-            {/* Seller Name */}
+            {/* SRO/BT Radio Buttons and Input - Previously modified to include radio buttons */}
             <div>
-              <label htmlFor="sellerName" className="block text-sm font-medium text-gray-700 mb-2">
-                SRO
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                SRO / BT
               </label>
+              {/* Radio Buttons for SRO or BT */}
+              <div className="flex gap-4 mb-3">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="sroOrBt"
+                    value="SRO"
+                    checked={formData.sroOrBt === 'SRO'}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    disabled={loading}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">SRO</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="sroOrBt"
+                    value="BT"
+                    checked={formData.sroOrBt === 'BT'}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    disabled={loading}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">BT</span>
+                </label>
+              </div>
               <input
                 type="text"
                 id="sro"
@@ -184,7 +211,7 @@ const formatDate = (date) => {
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.sro ? 'border-red-500' : 'border-gray-300'
                   }`}
-                placeholder="Enter SRO"
+                placeholder={`Enter ${formData.sroOrBt}`}
                 disabled={loading}
               />
               {errors.sro && (
