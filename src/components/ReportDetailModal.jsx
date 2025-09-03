@@ -77,7 +77,7 @@ const ReportDetailModal = ({ report, onClose, onChange, onUpdate }) => {
               </div>
               <div>
                 <h2 className="text-base md:text-xl font-bold text-slate-900">Report Details</h2>
-                <p className="text-sm text-slate-600">SRO #{report.SRO}</p>
+                <p className="text-sm text-slate-600">{report.SRO  ? "SRO" : "BT"} #{report.SRO || report.BT}</p>
               </div>
             </div>
             <button

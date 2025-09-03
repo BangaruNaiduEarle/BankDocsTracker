@@ -138,6 +138,7 @@ const ViewReports = () => {
         'ICICI Bank Limited',
         'Bajaj Housing Finance Ltd',
         'Aditya Birla Housing',
+        'IDFC First Bank Ltd'
 
     ]
 
@@ -209,7 +210,7 @@ const ViewReports = () => {
     const messageLines = [];
 
     Object.keys(groupedByBank).forEach((bankName) => {
-        messageLines.push(`🏦 *${bankName}*`);
+        messageLines.push(`🏦  *${bankName}*`);
         groupedByBank[bankName].forEach((report, index) => {
             // Modified to check SRO first, then BT, and display the appropriate field and value
             const sroOrBt = report.SRO ? `SRO: ${report.SRO}` : report.BT ? `BT: ${report.BT}` : 'SRO/BT: N/A';

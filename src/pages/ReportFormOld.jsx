@@ -3,16 +3,16 @@ import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import { API_Base_URL } from '../constants'
 
 const ReportForm = () => {
-  // Modified: Added date field to formData state
   const [formData, setFormData] = useState({
     sro: '',
     sellerName: '',
     ApplicantBorrowerName: '',
     bankName: '',
-    sroOrBt: 'SRO',
-    date: '' // New field for optional date input
+    // Added sroOrBt field to track radio button selection
+    sroOrBt: 'SRO' // Default to SRO
   });
 
+  // Predefined bank options
   const bankOptions = [
     'Tata Capital Housing Finance',
     'PNB Housing Finance Ltd',
@@ -26,7 +26,7 @@ const ReportForm = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [errors, setErrors] = useState({});
 
-  // Modified: Updated handleChange to handle the new date field
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -34,6 +34,7 @@ const ReportForm = () => {
       [name]: value
     }));
 
+    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -42,6 +43,7 @@ const ReportForm = () => {
     }
   };
 
+  // Validate form data
   const validateForm = () => {
     const newErrors = {};
 
@@ -71,21 +73,23 @@ const ReportForm = () => {
 
     const formatDate = (date) => {
       const pad = (n) => n.toString().padStart(2, '0');
+
       const year = date.getFullYear();
-      const month = pad(date.getMonth() + 1);
+      const month = pad(date.getMonth() + 1); // Months are 0-based
       const day = pad(date.getDate());
       const hours = pad(date.getHours());
       const minutes = pad(date.getMinutes());
       const seconds = pad(date.getSeconds());
+
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     };
 
-    // Modified: Use user-provided date if available, otherwise use current date
+    // Create full payload with default values, conditionally assigning sro value to SRO or BT column
     const fullFormData = {
-      ID: 'INCREMENT',
-      Date: formData.date ? formatDate(new Date(formData.date)) : formatDate(new Date()), // Use user date or fallback to current
-      SRO: formData.sroOrBt === 'SRO' ? formData.sro : '',
-      BT: formData.sroOrBt === 'BT' ? formData.sro : '',
+      ID: 'INCREMENT', // Let SheetDB or Google Sheet script handle auto-increment
+      Date: formatDate(new Date()),
+      SRO: formData.sroOrBt === 'SRO' ? formData.sro : '', // Store in SRO if SRO is selected
+      BT: formData.sroOrBt === 'BT' ? formData.sro : '', // Store in BT if BT is selected
       Seller_Name: formData.sellerName,
       Applicant_Borrower_Name: formData.ApplicantBorrowerName,
       Bank_Name: formData.bankName,
@@ -96,7 +100,7 @@ const ReportForm = () => {
       Loan_number: ''
     };
 
-    console.log(fullFormData);
+    console.log(fullFormData)
 
     try {
       const response = await fetch(`https://sheetdb.io/api/v1/ov7cl6dzqq037`, {
@@ -104,7 +108,7 @@ const ReportForm = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ data: [fullFormData] }),
+        body: JSON.stringify({ data: [fullFormData] }), // SheetDB expects `data` key
       });
 
       const data = await response.json();
@@ -116,14 +120,12 @@ const ReportForm = () => {
           text: `Report created successfully!`,
         });
 
-        // Modified: Reset date field along with others
         setFormData({
           sro: '',
           sellerName: '',
           ApplicantBorrowerName: '',
           bankName: '',
-          sroOrBt: 'SRO',
-          date: ''
+          sroOrBt: 'SRO' // Reset to default SRO
         });
       } else {
         setMessage({
@@ -154,6 +156,7 @@ const ReportForm = () => {
             </p>
           </div>
 
+          {/* Success/Error Message */}
           {message.text && (
             <div className={`mb-6 p-4 rounded-lg flex items-center space-x-2 ${message.type === 'success'
               ? 'bg-green-50 text-green-800 border border-green-200'
@@ -169,29 +172,12 @@ const ReportForm = () => {
           )}
 
           <div className="space-y-6">
-            {/* Modified: Added Date input field */}
-            <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                Date (Optional)
-              </label>
-              <input
-                type="date"
-                id="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.date ? 'border-red-500' : 'border-gray-300'}`}
-                disabled={loading}
-              />
-              {errors.date && (
-                <p className="mt-1 text-sm text-red-600">{errors.date}</p>
-              )}
-            </div>
-
+            {/* SRO/BT Radio Buttons and Input - Previously modified to include radio buttons */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 SRO / BT
               </label>
+              {/* Radio Buttons for SRO or BT */}
               <div className="flex gap-4 mb-3">
                 <label className="flex items-center">
                   <input
@@ -224,7 +210,8 @@ const ReportForm = () => {
                 name="sro"
                 value={formData.sro}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.sro ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.sro ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder={`Enter ${formData.sroOrBt}`}
                 disabled={loading}
               />
@@ -233,6 +220,7 @@ const ReportForm = () => {
               )}
             </div>
 
+            {/* Seller Name */}
             <div>
               <label htmlFor="sellerName" className="block text-sm font-medium text-gray-700 mb-2">
                 Seller Name
@@ -243,7 +231,8 @@ const ReportForm = () => {
                 name="sellerName"
                 value={formData.sellerName}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.sellerName ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.sellerName ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="Enter seller name"
                 disabled={loading}
               />
@@ -252,6 +241,7 @@ const ReportForm = () => {
               )}
             </div>
 
+            {/* Buyer Name */}
             <div>
               <label htmlFor="ApplicantBorrowerName" className="block text-sm font-medium text-gray-700 mb-2">
                 Applicant/Borrower Name
@@ -262,7 +252,8 @@ const ReportForm = () => {
                 name="ApplicantBorrowerName"
                 value={formData.ApplicantBorrowerName}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.ApplicantBorrowerName ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.ApplicantBorrowerName ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="Enter buyer name"
                 disabled={loading}
               />
@@ -271,6 +262,7 @@ const ReportForm = () => {
               )}
             </div>
 
+            {/* Bank Name */}
             <div>
               <label htmlFor="bankName" className="block text-sm font-medium text-gray-700 mb-2">
                 Bank Name
@@ -280,7 +272,8 @@ const ReportForm = () => {
                 name="bankName"
                 value={formData.bankName}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none bg-white ${errors.bankName ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none bg-white ${errors.bankName ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 disabled={loading}
               >
                 <option value="">Select a bank</option>
@@ -295,6 +288,7 @@ const ReportForm = () => {
               )}
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
               onClick={handleSubmit}
